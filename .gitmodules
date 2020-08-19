@@ -1,0 +1,10 @@
+[submodule "lib/fmt"]
+	path = lib/fmt
+	url = https://github.com/fmtlib/fmt.git
+[submodule "lib/z3"]
+	path = lib/z3
+	url = https://github.com/Z3Prover/z3.git
+[submodule "lib/llvm5"]
+	path = lib/llvm5
+	url = https://github.com/llvm/llvm-project.git
+	branch = llvmorg-5.0.1
