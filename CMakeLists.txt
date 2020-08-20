@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 
-project(horn2vmt)
+project(Horn2VMT)
+set(Horn2VMT_VERSION_MAJOR 1)
+set(Horn2VMT_VERSION_MINOR 0)
+set(Horn2VMT_VERSION ${Horn2VMT_VERSION_MAJOR}.${Horn2VMT_VERSION_MINOR})
 
 # IN_LIST which FindDoxygen needs
 cmake_policy(SET CMP0057 NEW)
@@ -18,9 +21,9 @@ option(COMPILE_WITH_COVERAGE
 
 # set default build type
 if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE "Release" CACHE STRING
-      "Choose the type of build, options are: Debug Release."
-      FORCE)
+  set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING
+    "Choose the type of build, options are: Debug RelWithDebInfo Release."
+    FORCE)
 endif(NOT CMAKE_BUILD_TYPE)
 
 # Add path for custom modules
@@ -85,7 +88,7 @@ link_directories(${Z3_DIR}/lib)
 if(NOT DEFINED LLVM_DIR)
   set(LLVM_DIR /opt/llvm-5.0.1/lib/cmake/llvm)
 endif()
-find_package(LLVM 5.0.0 CONFIG NO_DEFAULT_PATH)
+find_package(LLVM CONFIG NO_DEFAULT_PATH)
 if (NOT LLVM_FOUND)
   message(FATAL_ERROR "No llvm found. Please find path/to/cmake/llvm.")
   return()

@@ -5,14 +5,15 @@
 // contract DE-NA0003525.
 
 
+#include <fmt/ostream.h>
+#include <fmt/format.h>
 #include <boost/iterator/transform_iterator.hpp>
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
 #include <boost/range.hpp>
 #include <boost/range/adaptor/indexed.hpp>
 #include <boost/range/combine.hpp>
-#include <fmt/format.h>
-#include <fmt/ostream.h>
+#include <boost/make_unique.hpp>
 #include <fstream>
 #include <gmpxx.h>
 #include <llvm/ADT/DepthFirstIterator.h>
@@ -25,6 +26,69 @@
 #include <z3++.h>
 
 using namespace std;
+
+// These appear to be needed because the template system can't figure out
+// they're all subclasses af z3::ast?  But also using operator<< on them
+// doesn't work; has to be the formatter direct overload.
+template <>
+struct fmt::formatter<z3::expr> {
+  auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {
+    auto it = ctx.begin(), end = ctx.end();
+    if (it != end && *it != '}') {
+      std::cerr << "invalid format\n";
+      exit(1);
+    }
+    return it;
+  }
+
+  template <typename FormatContext>
+  auto format(const z3::expr& e, FormatContext& ctx) -> decltype(ctx.out()) {
+    return format_to(
+        ctx.out(),
+        "{}",
+        e.to_string());
+  }
+};
+
+template <>
+struct fmt::formatter<z3::func_decl> {
+  auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {
+    auto it = ctx.begin(), end = ctx.end();
+    if (it != end && *it != '}') {
+      std::cerr << "invalid format\n";
+      exit(1);
+    }
+    return it;
+  }
+
+  template <typename FormatContext>
+  auto format(const z3::func_decl& f, FormatContext& ctx) -> decltype(ctx.out()) {
+    return format_to(
+        ctx.out(),
+        "{}",
+        f.to_string());
+  }
+};
+
+template <>
+struct fmt::formatter<z3::sort> {
+  auto parse(format_parse_context& ctx) -> decltype(ctx.begin()) {
+    auto it = ctx.begin(), end = ctx.end();
+    if (it != end && *it != '}') {
+      std::cerr << "invalid format\n";
+      exit(1);
+    }
+    return it;
+  }
+
+  template <typename FormatContext>
+  auto format(const z3::sort& f, FormatContext& ctx) -> decltype(ctx.out()) {
+    return format_to(
+        ctx.out(),
+        "{}",
+        f.to_string());
+  }
+};
 
 //^----------------------------------------------------------------------------^
 // Section 1. This section basically has a ton of boilerplate and support
@@ -219,7 +283,7 @@ class ExprVectorIterator {
 
 ExprVectorIterator begin(const z3::expr_vector& v) { return ExprVectorIterator(0, v); }
 ExprVectorIterator end(const z3::expr_vector& v) { return ExprVectorIterator(v.size(), v); }
-}
+} // end namespace z3
 
 namespace llvm {
 //! Graph traits instance for z3::expr. Gives us LLVM the ability to use LLVM
@@ -243,11 +307,6 @@ class GraphTraits<z3::expr> {
 
 
 namespace {
-
-// 1 - high level messages
-// 2 - more info about high level messages
-// 3-5 - low level
-// 10 - *absurdly* low level informational messages for debugging, like deleting from a map
 class Logger {
   int level_;
   uint64_t count_;
@@ -389,7 +448,7 @@ using AstMap = std::unordered_map<z3::ast, T, z3::HashExpr, z3::EqualToExpr>;
 template <typename T>
 using SortMap = std::unordered_map<z3::sort, T, z3::HashExpr, z3::EqualToExpr>;
 
-static auto ExprArgs(const z3::expr& e) {
+static boost::iterator_range<ExprArgIterator> ExprArgs(const z3::expr& e) {
   return boost::make_iterator_range(
       ExprArgIterator::begin(e), ExprArgIterator::end(e));
 }
@@ -1144,7 +1203,8 @@ class TransitionSystem {
 
   inline OptionalRef<const StateVar> FindVar(const std::string& name) const {
     OptionalRef<const StateVar> ret;
-    if (auto search = vars_.find(name); search != vars_.end()) {
+    auto search = vars_.find(name);
+    if (search != vars_.end()) {
       ret = *search->second;
     }
     return ret;
@@ -1152,7 +1212,8 @@ class TransitionSystem {
   
   inline OptionalRef<const StateVar> FindVar(const z3::expr& e) const {
     OptionalRef<const StateVar> ret;
-    if (auto search = expr2var_.find(e); search != expr2var_.end()) {
+    auto search = expr2var_.find(e);
+    if (search != expr2var_.end()) {
       ret = search->second;
     }
     return ret;
@@ -1185,7 +1246,8 @@ class TransitionSystem {
   inline OptionalRef<const PrimaryInput> 
   FindInput(const std::string& name) const {
     OptionalRef<const PrimaryInput> ret;
-    if (auto search = inputs_.find(name); search != inputs_.end()) {
+    auto search = inputs_.find(name);
+    if (search != inputs_.end()) {
       ret = *search->second;
     }
     return ret;
@@ -1193,7 +1255,8 @@ class TransitionSystem {
   
   inline OptionalRef<const PrimaryInput> FindInput(const z3::expr& e) const {
     OptionalRef<const PrimaryInput> ret;
-    if (auto search = expr2input_.find(e); search != expr2input_.end()) {
+    auto search = expr2input_.find(e);
+    if (search != expr2input_.end()) {
       ret = search->second;
     }
     return ret;
@@ -1240,7 +1303,7 @@ class TransitionSystem {
     return ConstVarIterator(std::end(vars_));
   }
 
-  auto vars() const {
+  boost::iterator_range<ConstVarIterator> vars() const {
     return boost::make_iterator_range(vbegin(), vend());
   }
 
@@ -1274,7 +1337,7 @@ class TransitionSystem {
     return ConstInputIterator(std::end(inputs_));
   }
   
-  auto inputs() const {
+  boost::iterator_range<ConstInputIterator> inputs() const {
     return boost::make_iterator_range(ibegin(), iend());
   }
 
@@ -1301,14 +1364,14 @@ std::unique_ptr<StateVar> MakeStateVar(const z3::expr& zcurr,
                                        const z3::expr& znext) {
   assert(zcurr.decl().kind() == znext.decl().kind());
   unique_ptr<StateVar> ret;
-  ret = std::make_unique<StateVar>(
+  ret = boost::make_unique<StateVar>(
       zcurr.decl().name().str(), zcurr, znext);
   return ret;
 }
 
 std::unique_ptr<PrimaryInput> MakeInput(const z3::expr& zvar) {
   unique_ptr<PrimaryInput> ret;
-  ret = std::make_unique<PrimaryInput>(
+  ret = boost::make_unique<PrimaryInput>(
       zvar.decl().name().str(), zvar);
   return ret;
 }
@@ -1517,7 +1580,9 @@ class HornClauses {
   };
 
   // Iterates over the database as HornRules
-  auto rules() const {
+  boost::iterator_range<
+     boost::transform_iterator<MakeHornRule, z3::ExprVectorIterator>>
+  rules() const {
     return boost::make_iterator_range(
         boost::make_transform_iterator(rules_begin(), MakeHornRule()),
         boost::make_transform_iterator(rules_end(), MakeHornRule()));
@@ -1535,6 +1600,7 @@ class HornClauses {
 class Horn2Vmt {
  public:
   using RelationMap = AstMap<z3::expr>;
+  using RelationMapEntry = std::pair<z3::ast, z3::expr>;
   using PlacesMap = AstMap<vector<z3::expr>>;
 
   Horn2Vmt(const HornClauses&,
@@ -1592,7 +1658,7 @@ class Horn2Vmt {
     int relation_count =
         count_if(df_expr_ext_iterator::begin(rule.body(), visited),
                  df_expr_ext_iterator::end(rule.body(), visited),
-                 [&](auto&& x) { return x.is_app() &&
+                 [&](const z3::expr& x) { return x.is_app() &&
                      relations_.find(x.decl()) != relations_.end(); });
     if (relation_count > 1) {
       throw std::runtime_error("nonlinear Horn clause detected, exiting");
@@ -1697,7 +1763,7 @@ Horn2Vmt::Horn2Vmt(const HornClauses& hc, boost::optional<string> vm)
   // In the initial state, all relations are false.
   z3::expr init(ctx());
   transform(relations_.begin(), relations_.end(), ExprAndInserter(init),
-            [&](auto&& p) { return !xsys_.FindVar(p.second)->current(); });
+            [&](Horn2Vmt::RelationMapEntry&& p) { return !xsys_.FindVar(p.second)->current(); });
   xsys_.set_init_state(init);
 
 }
@@ -1733,7 +1799,8 @@ void Horn2Vmt::CreateStateSpace() {
     // rule, binning them by sort
     rule_places_.push_back(vector<z3::expr>());
     assert(static_cast<int>(rule_places_.size()) == index+1);
-    if (z3::expr rule_expr = rule; rule_expr.is_quantifier()) {
+    z3::expr rule_expr = rule;
+    if (rule_expr.is_quantifier()) {
       const unsigned num_bound_vars =
           Z3_get_quantifier_num_bound(rule_expr.ctx(), rule_expr); 
       if (allocate_inputs_by_sort_) {
@@ -1747,7 +1814,9 @@ void Horn2Vmt::CreateStateSpace() {
           }
           counts[sort]++;
         }
-        for (auto&& [sort, num_occurrences] : counts) {
+        for (std::pair<z3::sort, int>&& entry : counts) {
+          auto sort = entry.first;
+          auto num_occurrences = entry.second;
           int num_places =
               static_cast<int>(rule_places_by_sort[sort].size());
           for (int i = 0; i < (num_occurrences - num_places); i++) {
@@ -1791,8 +1860,8 @@ void Horn2Vmt::CreateStateSpace() {
     }
     // Pick up relations from rule heads; then declare Boolean relation vars
     // and place vars for each place. 
-    if (auto decl = rule.head().decl();
-        decl.decl_kind() == Z3_OP_UNINTERPRETED) {
+    auto decl = rule.head().decl();
+    if (decl.decl_kind() == Z3_OP_UNINTERPRETED) {
       // Create r elation var
       auto name = decl.name().str();
       auto var_name = "at-" + name;
@@ -1871,7 +1940,8 @@ class HornBodyRewriter : public ExprRewriter<HornBodyRewriter> {
   // rewritten children.
   z3::expr visit(const z3::expr& e) {
     if (e.is_app()) {
-      if (auto search = relations_.find(e.decl()); search != relations_.end()) {
+      auto search = relations_.find(e.decl());
+      if (search != relations_.end()) {
         z3::expr conj(e.ctx());
         ExprAndInserter out(conj);
         *out++ = search->second;
@@ -1911,7 +1981,7 @@ int main(int argc, char **argv) {
   // option parsing
   desc.add_options()
       ("help,h", "help")
-      ("log-level", po::value<int>(), "set log level")
+      ("v", po::value<int>(), "set log level")
       ("varmap", po::value<string>(), "output mapping between relation places and state variables to this file")
       ("filename", po::value<string>(), "SMT2 file to convert");
   po::positional_options_description pd;
@@ -1925,14 +1995,14 @@ int main(int argc, char **argv) {
     fmt::print(cerr, "error: missing filename\n");
   }
   if (vmap.count("help") || !vmap.count("filename")) {
-    fmt::print(cout, "{} filename", argv[0]);
+    fmt::print(cout, "{} [options] filename\n", argv[0]);
     fmt::print(cout, "{}\n", desc);
     return EXIT_FAILURE;
   }
 
   logger.set_level(0);
-  if (vmap.count("log-level")) {
-    logger.set_level(vmap["log-level"].as<int>());
+  if (vmap.count("v")) {
+    logger.set_level(vmap["v"].as<int>());
   }
 
   boost::optional<string> varmap_filename;
