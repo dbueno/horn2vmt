@@ -1,11 +1,15 @@
 # Horn2VMT
 
+This is a proof of concept implementation of the paper, "Horn2VMT: Translating
+Horn Reachability into Transition Systems," available online at
+http://eptcs.web.cse.unsw.edu.au/content.cgi?VPTHCVS2020#EPTCS320.13.
+
 ## Dependencies
-Z3 - 4.8.7 is tested but earlier should work
-LLVM - 5 & 10 tested but in between should work
-CMake 3.14
-Boost 1.67
-fmtlib - in a submodule of this repo
++ Z3 - 4.8.7 is tested but earlier should work
++ LLVM - 5 & 10 tested but in between should work
++ CMake 3.14
++ Boost 1.67
++ fmtlib - in a submodule of this repo
 
 ## install recipe
 
