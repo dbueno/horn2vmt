@@ -1777,6 +1777,8 @@ static string SortName(const z3::sort& sort) {
     auto domain_name = SortName(sort.array_domain());
     auto range_name = SortName(sort.array_range());
     return fmt::format("arr-{}-{}", domain_name, range_name);
+  } else if (sort.is_int()) {
+    return "int";
   } else {
     fmt::print("{}\n", sort);
     FATAL("unhandled sort");
