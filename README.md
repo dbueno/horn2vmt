@@ -26,3 +26,8 @@ SMT-LIBv2 compatible.
 ## usage
 
     horn2vmt file.smt2 > file.vmt
+
+## Reproducible build
+
+    nix-build -E "with import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/058b981b5bd.tar.gz") {}; callPackage (builtins.fetchurl "https://raw.githubusercontent.com/dbueno/horn2vmt/master/default.nix") {}"
+    ./result/bin/horn2vmt -h
