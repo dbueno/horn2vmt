@@ -1,7 +1,7 @@
 { boost17x, gmp
 , cmake, fetchFromGitHub, z3
 , pkgs, stdenv
-, llvmPackages
+, llvmPackages_10
 , debugVersion ? false
 }:
 
@@ -33,12 +33,12 @@
 
     nativeBuildInputs = [ cmake ];
 
-    buildInputs = [ llvmPackages.llvm z3 boost17x gmp ];
+    buildInputs = [ llvmPackages_10.llvm z3 boost17x gmp ];
 
     VERBOSE="1";
 
     cmakeFlags = [
-      "-DLLVM_DIR=${llvmPackages.libllvm.dev}/lib/cmake/llvm"
+      "-DLLVM_DIR=${llvmPackages_10.libllvm.dev}/lib/cmake/llvm"
       "-DZ3_DIR=${z3.lib}"
       "-Dfmt_DIR=${fmt}/lib/cmake/fmt"
     ];
