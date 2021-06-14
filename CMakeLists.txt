@@ -67,8 +67,17 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native")
 #set(CMAKE_THREAD_PREFER_PTHREAD ON)
 #include(FindThreads)
 
-set(FMT_DIR ${CMAKE_SOURCE_DIR}/lib/fmt)
-add_subdirectory(${FMT_DIR} EXCLUDE_FROM_ALL)
+if (NOT DEFINED FMT_DIR)
+  set(FMT_DIR ${CMAKE_SOURCE_DIR}/lib/fmt)
+endif()
+find_package(fmt)
+if(EXISTS "${FMT_DIR}" AND IS_DIRECTORY "${FMT_DIR}")
+  message(STATUS "Using fmtlib at: ${FMT_DIR}")
+else()
+  message(FATAL_ERROR "FMT_DIR not found: ${FMT_DIR}")
+  return()
+endif()
+# add_subdirectory(${FMT_DIR} EXCLUDE_FROM_ALL)
 include_directories(SYSTEM ${FMT_DIR}/include)
 
 # assumes Z3_DIR/build is where z3 dylib is
@@ -148,7 +157,7 @@ llvm_map_components_to_libnames(llvm_libs support)
 add_executable(horn2vmt tools/horn2vmt/main.cc)
 target_link_libraries(horn2vmt
     Boost::program_options
-    ${llvm_libs} z3 ${GMPXX_LIB} ${GMP_LIB} fmt)
+    ${llvm_libs} z3 ${GMPXX_LIB} ${GMP_LIB} fmt::fmt)
 
 if (COMPILE_WITH_COVERAGE)
   target_link_options(horn2vmt BEFORE
