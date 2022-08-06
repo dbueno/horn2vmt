@@ -1619,7 +1619,7 @@ class Horn2Vmt {
       ++index;
     }
     fmt::print("; {} inputs\n", xsys_.num_inputs());
-    for (const z3::expr&& input : boost::make_iterator_range(xsys_.ibegin(), xsys_.iend())) {
+    for (z3::expr input : boost::make_iterator_range(xsys_.ibegin(), xsys_.iend())) {
       fmt::print("{}\n", input.decl());
     }
     fmt::print("(define-fun .def{} () Bool (! {} :init true))\n", index++,
@@ -1816,7 +1816,7 @@ void Horn2Vmt::CreateStateSpace() {
           }
           counts[sort]++;
         }
-        for (std::pair<z3::sort, int>&& entry : counts) {
+        for (std::pair<z3::sort, int> entry : counts) {
           auto sort = entry.first;
           auto num_occurrences = entry.second;
           int num_places =

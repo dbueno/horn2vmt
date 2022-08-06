@@ -49,7 +49,7 @@ if (COMPILE_WITH_COVERAGE)
   endif()
 endif()
 
-add_compile_options(-Wall -Wextra -Werror -Wno-unused-function -Wunused-variable
+add_compile_options(-Wall -Wextra -Wno-unused-function -Wunused-variable
   -Wno-reorder -fno-omit-frame-pointer -g)
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
   add_compile_options( -Weffc++ -Wheader-hygiene -Wold-style-cast)
