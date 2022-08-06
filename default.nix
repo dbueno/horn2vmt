@@ -12,8 +12,8 @@
     src = fetchFromGitHub {
       owner = "dbueno";
       repo = "${pname}";
-      rev = "dev";
-      sha256 = "1i4bpvican8v6l5xw25m52n3fg45srwbaqa32z9izvw8v4naviw5";
+      rev = "37b90f62275a24ee686071ef0ec5879374286f99";
+      sha256 = "sha256-4TliZodlnWX7VxIh4ZLbU2XpmVGTSvhLnbQ5//yCpyE=";
     };
 
     fmt = stdenv.mkDerivation {
