@@ -24,6 +24,7 @@
             packages = with pkgs; [ creduce ];
             inherit (horn2vmt) cmakeFlags;
             hardeningDisable = [ "all" ];
+            CXXFLAGS = "-Werror";
           };
       });
 }
